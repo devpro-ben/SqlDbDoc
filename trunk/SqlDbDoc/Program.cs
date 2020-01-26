@@ -19,7 +19,8 @@ namespace Altairis.SqlDbDoc {
             Console.WriteLine("Altairis DB>doc version {0:4}", System.Reflection.Assembly.GetExecutingAssembly().GetName().Version);
             Console.WriteLine("Copyright (c) Altairis, 2011 | www.altairis.cz | SqlDbDoc.codeplex.com");
 			Console.WriteLine("Modifications by HAVIT, 2015 | www.havit.eu | https://github.com/hakenr/SqlDbDoc");
-			Console.WriteLine();
+            Console.WriteLine("Modifications by Ben, 2020 | https://github.com/devpro-ben/SqlDbDoc");
+            Console.WriteLine();
 
             // Add console trace listener
             Trace.Listeners.Add(new ConsoleTraceListener());
@@ -184,9 +185,139 @@ namespace Altairis.SqlDbDoc {
                 // Process columns
                 RenderColumns(objectId, e);
 
+                // Process refrence keys
+                RenderRefrenceKeys(objectId, e);
+
+                // Process default constraints
+                RenderDefaultConstraints(objectId, e);
+
+                // Process check constraints
+                RenderCheckConstraints(objectId, e);
+
+                // Process triggers
+                RenderTriggers(objectId, e);
+
+                // Process indexes
+                RenderIndexes(objectId, e);
+
                 // Process child objects
                 RenderChildObjects(objectId, e);
                 Trace.Unindent();
+            }
+        }
+
+        private static void RenderIndexes(int parentObjectId, XmlElement parentElement) {
+            // Get all indexes with given parent
+            var dt = new DataTable();
+            using (var da = new SqlDataAdapter(Resources.Commands.GetIndexes, connectionString)) {
+                da.SelectCommand.Parameters.Add("@parent_object_id", SqlDbType.Int).Value = parentObjectId;
+                da.Fill(dt);
+            }
+
+            // Process all indexes
+            var currentName = "";
+            XmlElement e = null;
+            foreach (DataRow row in dt.Rows) {
+                Trace.WriteLine(string.Format("{0}", row["name"]));
+
+                // Create index element
+                if (currentName != row["name"].ToString()) {
+                    e = parentElement.AppendChild(parentElement.OwnerDocument.CreateElement("index")) as XmlElement;
+                    foreach (DataColumn col in dt.Columns) {
+                        var value = row.ToXmlString(col);
+                        if (!string.IsNullOrWhiteSpace(value) && col.ColumnName != "columnName") e.SetAttribute(col.ColumnName, value);
+                    }
+                }
+                if (e != null) {
+                    var se = e.AppendChild(e.OwnerDocument.CreateElement("column")) as XmlElement;
+                    se.SetAttribute("name", row["columnName"].ToString());
+                }
+                
+                currentName = row["name"].ToString();
+            }
+        }
+
+        private static void RenderTriggers(int parentObjectId, XmlElement parentElement) {
+            // Get all triggers with given parent
+            var dt = new DataTable();
+            using (var da = new SqlDataAdapter(Resources.Commands.GetTriggers, connectionString)) {
+                da.SelectCommand.Parameters.Add("@parent_object_id", SqlDbType.Int).Value = parentObjectId;
+                da.Fill(dt);
+            }
+
+            // Process all triggers
+            foreach (DataRow row in dt.Rows) {
+                Trace.WriteLine(string.Format("{0}", row["name"]));
+
+                // Create trigger element
+                var e = parentElement.AppendChild(parentElement.OwnerDocument.CreateElement("trigger")) as XmlElement;
+                foreach (DataColumn col in dt.Columns) {
+                    var value = row.ToXmlString(col);
+                    if (!string.IsNullOrWhiteSpace(value)) e.SetAttribute(col.ColumnName, value);
+                }
+            }
+        }
+
+        private static void RenderCheckConstraints(int parentObjectId, XmlElement parentElement) {
+            // Get all check constraints with given parent
+            var dt = new DataTable();
+            using (var da = new SqlDataAdapter(Resources.Commands.GetCheckConstraints, connectionString)) {
+                da.SelectCommand.Parameters.Add("@parent_object_id", SqlDbType.Int).Value = parentObjectId;
+                da.Fill(dt);
+            }
+
+            // Process all check constraints
+            foreach (DataRow row in dt.Rows) {
+                Trace.WriteLine(string.Format("{0}", row["name"]));
+
+                // Create check constraint element
+                var e = parentElement.AppendChild(parentElement.OwnerDocument.CreateElement("checkConstraint")) as XmlElement;
+                foreach (DataColumn col in dt.Columns) {
+                    var value = row.ToXmlString(col);
+                    if (!string.IsNullOrWhiteSpace(value)) e.SetAttribute(col.ColumnName, value);
+                }
+            }
+        }
+
+        private static void RenderDefaultConstraints(int parentObjectId, XmlElement parentElement) {
+            // Get all default constraints with given parent
+            var dt = new DataTable();
+            using (var da = new SqlDataAdapter(Resources.Commands.GetDefaultConstraints, connectionString)) {
+                da.SelectCommand.Parameters.Add("@parent_object_id", SqlDbType.Int).Value = parentObjectId;
+                da.Fill(dt);
+            }
+
+            // Process all default constraints
+            foreach (DataRow row in dt.Rows) {
+                Trace.WriteLine(string.Format("{0}", row["name"]));
+
+                // Create default constraint element
+                var e = parentElement.AppendChild(parentElement.OwnerDocument.CreateElement("defaultConstraint")) as XmlElement;
+                foreach (DataColumn col in dt.Columns) {
+                    var value = row.ToXmlString(col);
+                    if (!string.IsNullOrWhiteSpace(value)) e.SetAttribute(col.ColumnName, value);
+                }
+            }
+        }
+
+        private static void RenderRefrenceKeys(int parentObjectId, XmlElement parentElement) {
+            // Get all refrence keys with given parent
+            var dt = new DataTable();
+            using (var da = new SqlDataAdapter(Resources.Commands.GetRefrenceKeys, connectionString)) {
+                da.SelectCommand.Parameters.Add("@parent_object_id", SqlDbType.Int).Value = parentObjectId;
+                da.Fill(dt);
+            }
+
+            // Process all refrence keys
+            foreach (DataRow row in dt.Rows) {
+                Trace.WriteLine(string.Format("{0}", row["name"]));
+
+                // Create refrence key element
+                var e = parentElement.AppendChild(parentElement.OwnerDocument.CreateElement("refrence")) as XmlElement;
+                foreach (DataColumn col in dt.Columns) {
+                    var value = row.ToXmlString(col);
+                    if (!string.IsNullOrWhiteSpace(value)) e.SetAttribute(col.ColumnName, value);
+                }
             }
         }
 

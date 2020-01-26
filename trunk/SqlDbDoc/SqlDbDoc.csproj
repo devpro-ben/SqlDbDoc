@@ -63,10 +63,18 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="appicon.ico" />
+    <Content Include="Resources\Commands\GetCheckConstraints.sql" />
     <Content Include="Resources\Commands\GetColumns.sql" />
     <Content Include="Resources\Commands\GetDatabase.sql" />
+    <Content Include="Resources\Commands\GetDefaultConstraints.sql" />
+    <Content Include="Resources\Commands\GetIndexes.sql" />
     <Content Include="Resources\Commands\GetObjects.sql" />
+    <Content Include="Resources\Commands\GetRefrenceKeys.sql" />
     <Content Include="Resources\Commands\GetSchemas.sql" />
+    <Content Include="Resources\Commands\GetTriggers.sql" />
+    <Content Include="Resources\Templates\Html-NitinPatel.xslt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Resources\Templates\Html.xslt" />
     <Content Include="Resources\Templates\WikiPlex.xslt" />
   </ItemGroup>

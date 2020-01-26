@@ -1,6 +1,6 @@
 ﻿SELECT 
 	C.name														AS [name],
-	TYPE_NAME(C.system_type_id)									AS [type],
+	TYPE_NAME(C.user_type_id)									AS [type],
 	C.max_length												AS [length],
 	C.precision													AS [precision], 
 	C.scale														AS [scale], 

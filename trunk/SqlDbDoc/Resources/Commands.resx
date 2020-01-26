@@ -118,16 +118,31 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="GetCheckConstraints" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>commands\getcheckconstraints.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
   <data name="GetColumns" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>commands\getcolumns.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
   <data name="GetDatabase" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>commands\getdatabase.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
+  <data name="GetDefaultConstraints" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>commands\getdefaultconstraints.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="GetIndexes" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>commands\getindexes.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
   <data name="GetObjects" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>commands\getobjects.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
+  <data name="GetRefrenceKeys" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>commands\getrefrencekeys.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
   <data name="GetSchemas" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>commands\getschemas.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="GetTriggers" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>commands\gettriggers.sql;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
 </root>
