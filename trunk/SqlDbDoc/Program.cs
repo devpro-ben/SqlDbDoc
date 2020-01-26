@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Xml;
 using System.Xml.Xsl;
+using System.Linq;
 using NConsoler;
 
 namespace Altairis.SqlDbDoc {
@@ -37,7 +38,8 @@ namespace Altairis.SqlDbDoc {
             [Optional(false, "y", Description = "overwrite output file")] bool overwrite,
             [Optional(null, "f", Description = "output format: html, wikiplex, xml (autodetected when omitted)")] string format,
             [Optional(false, Description = "debug mode (show detailed error messages)")] bool debug,
-			[Optional(null, "t", Description = "xslt template (file name)")] string template
+			[Optional(null, "t", Description = "xslt template (file name)")] string template,
+            [Optional(null, "i", Description = "objects to include in documentation.")] string[] includeObjects
             ) {
 
             // Validate arguments
@@ -86,7 +88,12 @@ namespace Altairis.SqlDbDoc {
                 RenderSchemas(doc.DocumentElement);
 
                 // Process top-level objects
-                RenderChildObjects(0, doc.DocumentElement);
+                if (includeObjects != null) {
+                    includeObjects = includeObjects.Where(x => !string.IsNullOrWhiteSpace(x))
+                        .Select(x => x.ToLower()).ToArray();
+                }
+                
+                RenderChildObjects(0, doc.DocumentElement, includeObjects);
 
                 if (format.Equals("xml")) {
                     // Save raw XML
@@ -161,16 +168,19 @@ namespace Altairis.SqlDbDoc {
             }
         }
 
-        static void RenderChildObjects(int parentObjectId, XmlElement parentElement) {
+        static void RenderChildObjects(int parentObjectId, XmlElement parentElement, string[] includeObjects) {
             // Get all database objects with given parent
             var dt = new DataTable();
             using (var da = new SqlDataAdapter(Resources.Commands.GetObjects, connectionString)) {
                 da.SelectCommand.Parameters.Add("@parent_object_id", SqlDbType.Int).Value = parentObjectId;
                 da.Fill(dt);
             }
-
+            
             // Process all objects
             foreach (DataRow row in dt.Rows) {
+                if (includeObjects != null && !includeObjects.Contains(row["name"].ToString().ToLower()))
+                    continue;
+
                 var objectId = (int)row["id"];
                 Trace.WriteLine(string.Format("{0}.{1}", row["schema"], row["name"]));
 
@@ -201,7 +211,7 @@ namespace Altairis.SqlDbDoc {
                 RenderIndexes(objectId, e);
 
                 // Process child objects
-                RenderChildObjects(objectId, e);
+                RenderChildObjects(objectId, e, null);
                 Trace.Unindent();
             }
         }
