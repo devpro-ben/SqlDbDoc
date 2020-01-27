@@ -7,12 +7,15 @@ using System.Xml;
 using System.Xml.Xsl;
 using System.Linq;
 using NConsoler;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace Altairis.SqlDbDoc {
     class Program {
         private static readonly string[] FORMATS = { "html", "wikiplex", "xml" };
         private static readonly string[] HTML_EXTENSIONS = { ".htm", ".html", ".xhtml" };
         private static readonly string[] WIKI_EXTENSIONS = { ".txt", ".wiki" };
+        private static readonly string[] DOCX_EXTENSIONS = { ".docx" };
 
         private static string connectionString;
 
@@ -36,7 +39,7 @@ namespace Altairis.SqlDbDoc {
             [Required(Description = "connection string")] string connection,
             [Required(Description = "output file name")] string fileName,
             [Optional(false, "y", Description = "overwrite output file")] bool overwrite,
-            [Optional(null, "f", Description = "output format: html, wikiplex, xml (autodetected when omitted)")] string format,
+            [Optional(null, "f", Description = "output format: html, wikiplex, xml, docx (autodetected when omitted)")] string format,
             [Optional(false, Description = "debug mode (show detailed error messages)")] bool debug,
 			[Optional(null, "t", Description = "xslt template (file name)")] string template,
             [Optional(null, "i", Description = "objects to include in documentation.")] string[] includeObjects
@@ -62,8 +65,9 @@ namespace Altairis.SqlDbDoc {
                 }
                 else if (Array.IndexOf(WIKI_EXTENSIONS, Path.GetExtension(fileName)) > -1) {
                     format = "wikiplex";
-                }
-                else {
+                } else if (Array.IndexOf(DOCX_EXTENSIONS, Path.GetExtension(fileName)) > -1) {
+                    format = "docx";
+                } else {
                     format = "xml";
                 }
             }
@@ -81,7 +85,7 @@ namespace Altairis.SqlDbDoc {
                 // Process database info
                 connectionString = connection;
                 doc.AppendChild(doc.CreateElement("database"));
-                doc.DocumentElement.SetAttribute("dateGenerated", XmlConvert.ToString(DateTime.Now, XmlDateTimeSerializationMode.RoundtripKind));
+                doc.DocumentElement.SetAttribute("dateGenerated", XmlConvert.ToString(DateTime.Now, XmlDateTimeSerializationMode.Unspecified));
                 RenderDatabase(doc.DocumentElement);
 
                 // Process schemas
@@ -111,8 +115,9 @@ namespace Altairis.SqlDbDoc {
 	            }
 	            else if (format.Equals("html")) {
                     xslt = Resources.Templates.Html;
-                }
-                else {
+                } else if (format.Equals("docx")) {
+                    xslt = Resources.Templates.Docx;
+                } else {
                     xslt = Resources.Templates.WikiPlex;
                 }
 
@@ -125,9 +130,17 @@ namespace Altairis.SqlDbDoc {
                     Console.WriteLine("OK");
 
                     Console.Write("Performing XSL transformation...");
-                    using (var fw = File.CreateText(fileName)) {
-                        tran.Transform(doc, null, fw);
+                    if (format.Equals("docx")) {
+                        var stringWriter = new StringWriter();
+                        var xmlWriter = XmlWriter.Create(stringWriter);
+                        tran.Transform(doc, xmlWriter);
+                        CreateDocxFile(fileName, stringWriter);
+                    } else {
+                        using (var fw = File.CreateText(fileName)) {
+                            tran.Transform(doc, null, fw);
+                        }
                     }
+                        
                     Console.WriteLine("OK");
                 }
             }
@@ -135,6 +148,32 @@ namespace Altairis.SqlDbDoc {
                 Console.WriteLine("Failed!");
                 Console.WriteLine(ex.Message);
                 if (debug) Console.WriteLine(ex.ToString());
+            }
+        }
+
+        private static void CreateDocxFile(string fileName, StringWriter stringWriter) {
+            // Create an Xml Document of the new content.
+            XmlDocument newWordContent = new XmlDocument();
+            var xml = stringWriter.ToString();
+            newWordContent.LoadXml(xml);
+
+            //Copy the Word 2007 source document to the output file.
+            File.WriteAllBytes(fileName, Resources.Templates.DocTemplate);
+
+            //Use the Open XML SDK version 2.0 to open the output 
+            //  document in edit mode.
+            using (WordprocessingDocument output =
+              WordprocessingDocument.Open(fileName, true)) {
+                //Using the body element within the new content XmlDocument
+                //  create a new Open Xml Body object.
+                Body updatedBodyContent =
+                  new Body(newWordContent.DocumentElement.InnerXml);
+
+                //Replace the existing Document Body with the new content.
+                output.MainDocumentPart.Document.Body = updatedBodyContent;
+
+                //Save the updated output document.
+                output.MainDocumentPart.Document.Save();
             }
         }
 
