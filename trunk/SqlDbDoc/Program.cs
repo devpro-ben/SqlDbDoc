@@ -42,7 +42,8 @@ namespace Altairis.SqlDbDoc {
             [Optional(null, "f", Description = "output format: html, wikiplex, xml, docx (autodetected when omitted)")] string format,
             [Optional(false, Description = "debug mode (show detailed error messages)")] bool debug,
 			[Optional(null, "t", Description = "xslt template (file name)")] string template,
-            [Optional(null, "i", Description = "objects to include in documentation.")] string[] includeObjects
+            [Optional(null, "i", Description = "objects to include in documentation.")] string[] includeObjects,
+            [Optional(null, "d", Description = "docx template (file name, .docx)")] string docxTemplate
             ) {
 
             // Validate arguments
@@ -134,7 +135,7 @@ namespace Altairis.SqlDbDoc {
                         var stringWriter = new StringWriter();
                         var xmlWriter = XmlWriter.Create(stringWriter);
                         tran.Transform(doc, xmlWriter);
-                        CreateDocxFile(fileName, stringWriter);
+                        CreateDocxFile(fileName, stringWriter, docxTemplate);
                     } else {
                         using (var fw = File.CreateText(fileName)) {
                             tran.Transform(doc, null, fw);
@@ -151,14 +152,20 @@ namespace Altairis.SqlDbDoc {
             }
         }
 
-        private static void CreateDocxFile(string fileName, StringWriter stringWriter) {
+        private static void CreateDocxFile(string fileName, StringWriter stringWriter, string templateFilename) {
             // Create an Xml Document of the new content.
             XmlDocument newWordContent = new XmlDocument();
             var xml = stringWriter.ToString();
             newWordContent.LoadXml(xml);
 
             //Copy the Word 2007 source document to the output file.
-            File.WriteAllBytes(fileName, Resources.Templates.DocTemplate);
+            if (!string.IsNullOrWhiteSpace(templateFilename)) {
+                File.Copy(templateFilename, fileName, true);
+            }
+            else {
+                File.WriteAllBytes(fileName, Resources.Templates.DocTemplate);
+            }
+            
 
             //Use the Open XML SDK version 2.0 to open the output 
             //  document in edit mode.
